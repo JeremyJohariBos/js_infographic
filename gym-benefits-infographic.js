@@ -31,7 +31,7 @@ class GymBenefitsInfographic extends HTMLElement {
   calloutTemplate(callout) {
     return `
       <div class="callout ${callout.position}" data-id="${callout.id}">
-      <div class="callout-circle">
+      ${callout.position == "mid-right" ? `<div class="callout-circle-right">` : `<div class="callout-circle-left">`}
       ${callout.img ? `<img class="callout-icon" src="${callout.img}">` : ""}
       </div>
         <div class="callout-content">
@@ -41,6 +41,12 @@ class GymBenefitsInfographic extends HTMLElement {
       </div>
     `;
   }
+
+  revealAllCallouts() {
+  this.shadowRoot
+    .querySelectorAll(".callout")
+    .forEach(c => c.classList.add("visible"));
+}
 
   initScrollReveal() {
     const observer = new IntersectionObserver(
@@ -83,46 +89,100 @@ class GymBenefitsInfographic extends HTMLElement {
     }
   }
 
+  isMobile() {
+    return window.matchMedia("(max-width: 768px)").matches;
+  }
+
   connectedCallback() {
     this.render();
-    this.initScrollReveal();
+    if (this.isMobile()) {
+      console.log(true,'mobile')
+      this.revealAllCallouts();
+    } else {
+      this.initScrollReveal();
+      console.log("web")
+    }
+    this.initParallax();
   }
-  
+
+  // small movement for img
+  initParallax() {
+    const image = this.shadowRoot.querySelector(".silhouette-placeholder");
+
+    if (!image) return;
+
+    window.addEventListener("scroll", () => {
+      const rect = image.getBoundingClientRect();
+      const offset = rect.top * 0.15;
+      image.style.transform = `translateY(${offset}px)`;
+    });
+  }
 
   render() {
     this.shadowRoot.innerHTML = `
       ${this.styles()}
-      <section class="infographic">
-        
-        <!-- Intro -->
-        <div class="intro">
-          <h2>How Exercise Transforms Your Body & Mind</h2>
-          <p>Scroll to explore the benefits</p>
-        </div>
+<section class="infographic">
 
-        <!-- Main body stage -->
-<div class="body-stage">
-
-  <!-- Scroll markers -->
-<div class="reveal-marker brain-marker" data-target="brain"></div>
-<div class="reveal-marker heart-marker" data-target="heart"></div>
-<div class="reveal-marker muscle-marker" data-target="muscle"></div>
-
-  <div class="silhouette">
-    <div class="silhouette-placeholder"></div>
+  <!-- Intro -->
+  <div class="intro">
+    <h2>How Exercise Transforms Your Body & Mind</h2>
+    <p>Scroll to explore the benefits</p>
   </div>
 
-  ${this.callouts.map((c) => this.calloutTemplate(c)).join("")}
+  <!-- Main body stage -->
+  <div class="body-stage">
 
+    <!-- Scroll markers -->
+    <div class="reveal-marker brain-marker" data-target="brain"></div>
+    <div class="reveal-marker heart-marker" data-target="heart"></div>
+    <div class="reveal-marker muscle-marker" data-target="muscle"></div>
+
+    <div class="silhouette">
+      <div class="silhouette-placeholder"></div>
+    </div>
+
+    ${this.callouts.map((c) => this.calloutTemplate(c)).join("")}
+
+  </div>
+
+  <!-- Summary -->
+<div class="summary">
+  <h3>Consistency Beats Intensity</h3>
+  <p class="summary-sub">
+    Sustainable habits outside the gym matter just as much as training itself.
+  </p>
+
+  <div class="lifestyle-strip">
+    <div class="lifestyle-item protein">
+      <div class="overlay">
+        <h4>Protein</h4>
+        <p>
+          Protein supports muscle repair, preserves lean mass, and helps regulate appetite during fat loss.
+        </p>
+      </div>
+    </div>
+
+    <div class="lifestyle-item sleep">
+      <div class="overlay">
+        <h4>Sleep</h4>
+        <p>
+          Quality sleep optimizes recovery, hormone balance, and long-term performance.
+        </p>
+      </div>
+    </div>
+
+    <div class="lifestyle-item nutrition">
+      <div class="overlay">
+        <h4>Nutrition</h4>
+        <p>
+          Consistent, balanced nutrition fuels training, recovery, and overall health.
+        </p>
+      </div>
+    </div>
+  </div>
 </div>
 
-        <!-- Summary -->
-        <div class="summary">
-          <h3>Consistency Beats Intensity</h3>
-          <p>Exercise improves both physical and mental health when practiced regularly.</p>
-        </div>
-
-      </section>
+</section>
     `;
   }
 
@@ -135,13 +195,14 @@ class GymBenefitsInfographic extends HTMLElement {
   }
 
   .infographic {
-    background: #0f0f0f;
+    background:radial-gradient(circle at top, #1a1a1a, #0f0f0f 60%), #0f0f0f;
     color: #fff;
     padding: 80px 24px;
     box-sizing: border-box;
+    font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
   }
 
-  /* Intro */
+  /* intro */
   .intro {
     text-align: center;
     margin-bottom: 80px;
@@ -149,22 +210,26 @@ class GymBenefitsInfographic extends HTMLElement {
 
   .intro h2 {
     margin: 0 0 12px;
-    font-size: 32px;
+    font-size: 34px;
+    font-weight: 600;
+    letter-spacing: -0.02em;
   }
 
   .intro p {
     opacity: 0.7;
   }
 
-  /* Body stage */
-  .body-stage {
-    position: relative;
-    max-width: 900px;
-    height: 700px;
-    margin: 0 auto 120px;
-  }
+  /* body stage */
+.body-stage {
+  position: relative;
+  max-width: 900px;
+  min-height: 700px;
+  margin: 0 auto 120px;
+  margin-bottom: 160px;
+}
 
-  /* Silhouette */
+  /* silhouette */
+
   .silhouette {
     position: absolute;
     inset: 0;
@@ -207,10 +272,11 @@ class GymBenefitsInfographic extends HTMLElement {
     top: 500px;
   }
 
-  /* Callouts */
+  /* callouts */
 
   .callout {
     display: flex;
+    gap: 12px;
     flex-direction: column;
     align-items: center;
     justify-content: center;
@@ -237,16 +303,30 @@ class GymBenefitsInfographic extends HTMLElement {
 
   .callout-content h4 {
     margin: 10px 0 0 4px;
-    font-size: 14px;
+    font-size: 15px;
+    font-weight: 500;
+    letter-spacing: -0.01em;
+    color: #f2f2f2;
   }
+
+  .callout-content h4::after {
+    content: "";
+    display: block;
+    width: 90%;
+    height: 1px;
+    background: rgba(255,255,255,0.3);
+    margin: 8px auto 0;
+}
 
   .callout-content p {
     margin: 0;
-    font-size: 12px;
+    font-size: 13px;
+    line-height: 1.5;
+    color: rgba(255,255,255,0.7);
     opacity: 0.75;
   }
 
-  /* Positioning callouts */
+  /* positioning */
   .callout.top-left {
     top: 60px;
     left: 0;
@@ -262,7 +342,8 @@ class GymBenefitsInfographic extends HTMLElement {
     left: 0;
   }
 
-  .callout-circle {
+  .callout-circle-left,
+  .callout-circle-right {
     width: 120px;
     height: 120px;
     background-color: white;
@@ -270,7 +351,41 @@ class GymBenefitsInfographic extends HTMLElement {
     display: flex;
     align-items: center;
     justify-content: center;
+    margin-bottom: 6px;
   }
+
+  .callout-circle-left::after {
+  content: "";
+  position: absolute;
+  width: 80px;
+  height: 2px;
+  background: rgba(255,255,255,0.25);
+  top: 35%;
+  left: 80%;
+  transform-origin: left;
+  transform: scaleX(0);
+  transition: transform 0.6s ease;
+}
+
+  .callout-circle-right::after {
+  content: "";
+  position: absolute;
+  width: 80px;
+  height: 2px;
+  background: rgba(255,255,255,0.25);
+  top: 35%;
+  right: 80%;
+  transform-origin: right;
+  transform: scaleX(0);
+  transition: transform 0.6s ease;
+}
+
+.callout.visible .callout-circle-left::after {
+  transform: scaleX(1);
+}
+.callout.visible .callout-circle-right::after {
+  transform: scaleX(1);
+}
 
   .callout-icon {
     font-size: 20px;
@@ -281,6 +396,8 @@ class GymBenefitsInfographic extends HTMLElement {
     width: 90px;
     height: 90px;
   }
+
+  // icon animation 
 
   @keyframes brainPulse {
     0% {
@@ -339,7 +456,8 @@ class GymBenefitsInfographic extends HTMLElement {
     animation: muscleFlex 2.8s ease-in-out infinite;
   }
 
-  /* Summary */
+  /* summary */
+
   .summary {
     text-align: center;
     max-width: 600px;
@@ -354,23 +472,117 @@ class GymBenefitsInfographic extends HTMLElement {
     opacity: 0.7;
   }
 
-  /* Mobile */
-  @media (max-width: 768px) {
-    .body-stage {
-      height: auto;
-    }
+  .lifestyle-strip {
+  display: flex;
+  height: 280px;
+  margin-top: 48px;
+  overflow: hidden;
+  border-radius: 24px;
+  background: radial-gradient(circle at top, #1a1a1a, #0f0f0f 60%), #0f0f0f;
+}
+
+.lifestyle-item {
+  position: relative;
+  flex: 1;
+  background-size: cover;
+  background-position: center;
+  clip-path: polygon(8% 0, 100% 0, 92% 100%, 0% 100%);
+  transition: filter 0.4s ease, transform 0.4s ease;
+}
+
+/* lifestyle cutting */
+.lifestyle-item:first-child {
+  clip-path: polygon(0 0, 100% 0, 92% 100%, 0% 100%);
+}
+
+.lifestyle-item:last-child {
+  clip-path: polygon(8% 0, 100% 0, 100% 100%, 0% 100%);
+}
+
+/* images */
+.lifestyle-item.protein {
+  background-image: url("./assets/protein-stock.png");
+  background-size: contain;
+  background-repeat: no-repeat;
+}
+
+.lifestyle-item.sleep {
+  background-image: url("./assets/sleep-stock.png");
+  background-size: contain;
+  background-repeat: no-repeat;
+}
+
+.lifestyle-item.nutrition {
+  background-image: url("./assets/food-stock.png");
+  background-size: contain;
+  background-repeat: no-repeat;
+}
+
+
+.lifestyle-item .overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(15, 15, 15, 0.85);
+  color: #fff;
+  padding: 32px;
+  opacity: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  transition: opacity 0.4s ease;
+}
+
+.lifestyle-item:hover {
+  transform: scale(1.02);
+}
+
+.lifestyle-item:hover .overlay {
+  opacity: 1;
+}
+
+.lifestyle-item h4 {
+  margin: 0 0 8px;
+  font-size: 18px;
+}
+
+.lifestyle-item p {
+  font-size: 14px;
+  line-height: 1.5;
+  opacity: 0.85;
+}
+
+  /* mobile */
+@media (max-width: 768px) {
+  .body-stage {
+    min-height: auto;
+    padding-bottom: 40px;
+  }
 
     .silhouette {
       position: relative;
       margin-bottom: 40px;
     }
 
-    .callout {
-      position: relative;
-      margin: 16px auto;
-      display: block;
-      text-align: center;
-    }
+  .callout {
+    position: relative;
+    opacity: 1;
+    transform: none;
+    margin: 32px auto;
+  }
+
+  .reveal-marker {
+    display: none;
+  }
+
+    .lifestyle-strip {
+    flex-direction: column;
+    height: auto;
+  }
+
+  .lifestyle-item {
+    height: 200px;
+    clip-path: none;
+  }
   }
 </style>
     `;
