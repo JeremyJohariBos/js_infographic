@@ -68,5 +68,3 @@ and strictly created for the purpose of this assesment.
 # Live Demo
 
 A hosted demo is available at:
-
-**[Netlify Demo Link Here]**
